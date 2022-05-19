@@ -3,11 +3,11 @@
 
 # import libraries
 import os
+import logging
 os.environ['QT_QPA_PLATFORM']='offscreen'
 
 
-
-def import_data(pth):
+def import_data(pth, debug=False):
     '''
     returns dataframe for the csv found at pth
 
@@ -15,9 +15,8 @@ def import_data(pth):
             pth: a path to the csv
     output:
             df: pandas dataframe
-    '''	
-	pass
-
+    '''
+    pass
 
 def perform_eda(df):
     '''
@@ -28,7 +27,7 @@ def perform_eda(df):
     output:
             None
     '''
-	pass
+    pass
 
 
 def encoder_helper(df, category_lst, response):
@@ -108,3 +107,16 @@ def train_models(X_train, X_test, y_train, y_test):
               None
     '''
     pass
+
+def main(debug=False):
+    '''
+    main function of this script
+    '''
+    df = import_data(debug=debug)
+    perform_eda(df)
+    X_train, X_test, y_train, y_test = perform_feature_engineering(df, response_string)
+    train_models(X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
+
+
+if __name__ == '__main__':
+    main()

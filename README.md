@@ -3,7 +3,8 @@
 - Project **Predict Customer Churn** of ML DevOps Engineer Nanodegree Udacity
 
 ## Project Description
-Your project description here.
+
+Identify credit card customers that are most likely to churn. Original data is from [Kaggle credit card customers data](https://www.kaggle.com/datasets/sakshigoyal7/credit-card-customers/code)
 
 ## Files and data description
 Overview of the files and data present in the root directory. 
