@@ -1,13 +1,38 @@
 # library doc string
 
-
 # import libraries
 import os
+import pandas as pd
 import logging
+from typing import Tuple
+from sklearn.model_selection import train_test_split
+import shap
+import joblib
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns; sns.set()
+
+from sklearn.preprocessing import normalize
+from sklearn.model_selection import train_test_split
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+
+from sklearn.metrics import plot_roc_curve, classification_report
+
+
+logging.basicConfig(
+    # filename='./logs/churn_library.log',
+    level = logging.INFO,
+    filemode='w',
+    format='%(name)s - %(levelname)s - %(message)s')
+
 os.environ['QT_QPA_PLATFORM']='offscreen'
 
 
-def import_data(pth, debug=False):
+def import_data(pth, debug=False) -> pd.DataFrame:
     '''
     returns dataframe for the csv found at pth
 
@@ -16,9 +41,14 @@ def import_data(pth, debug=False):
     output:
             df: pandas dataframe
     '''
-    pass
+    if debug:
+        df = pd.read_csv(r"./data/bank_data.csv", nrows=100)
+    else:
+        df = pd.read_csv(r"./data/bank_data.csv")
+    return df
 
-def perform_eda(df):
+
+def perform_eda(df: pd.DataFrame, img_dir='images/') -> None:
     '''
     perform eda on df and save figures to images folder
     input:
@@ -27,7 +57,9 @@ def perform_eda(df):
     output:
             None
     '''
-    pass
+    plt.figure(figsize=(20, 10))
+    df.Marital_Status.value_counts('normalize').plot(kind='bar');
+    plt.savefig(os.path.join(img_dir, 'marital_status_bar.png'))
 
 
 def encoder_helper(df, category_lst, response):
@@ -46,7 +78,7 @@ def encoder_helper(df, category_lst, response):
     pass
 
 
-def perform_feature_engineering(df, response):
+def perform_feature_engineering(df: pd.DataFrame, response=None) -> Tuple[pd.DataFrame]:
     '''
     input:
               df: pandas dataframe
@@ -58,6 +90,11 @@ def perform_feature_engineering(df, response):
               y_train: y training data
               y_test: y testing data
     '''
+    df['Churn'] = df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
+    y = df['Churn']
+    X= df.drop('Churn', axis=1)[['Total_Relationship_Count', 'Total_Trans_Amt']]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    return X_train, X_test, y_train, y_test
 
 def classification_report_image(y_train,
                                 y_test,
@@ -95,7 +132,7 @@ def feature_importance_plot(model, X_data, output_pth):
     '''
     pass
 
-def train_models(X_train, X_test, y_train, y_test):
+def train_models(X_train, X_test, y_train, y_test, debug=False) -> None:
     '''
     train, store model results: images + scores, and store models
     input:
@@ -106,17 +143,68 @@ def train_models(X_train, X_test, y_train, y_test):
     output:
               None
     '''
-    pass
+    rfc = RandomForestClassifier(random_state=42)
+    # Use a different solver if the default 'lbfgs' fails to converge
+    # Reference: https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+    lrc = LogisticRegression(solver='lbfgs', max_iter=3000)
+
+
+    if debug:
+        param_grid = {
+            'n_estimators': [200],
+            'max_features': ['auto'],
+            'max_depth': [4,],
+            'criterion': ['gini']
+        }
+    else:
+        param_grid = {
+            'n_estimators': [200, 500],
+            'max_features': ['auto', 'sqrt'],
+            'max_depth': [4, 5, 100],
+            'criterion': ['gini', 'entropy']
+        }
+
+    logging.info("Grid Searching")
+    cv_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5, verbose=True)
+    cv_rfc.fit(X_train, y_train)
+
+    lrc.fit(X_train, y_train)
+
+    y_train_preds_rf = cv_rfc.best_estimator_.predict(X_train)
+    y_test_preds_rf = cv_rfc.best_estimator_.predict(X_test)
+
+    y_train_preds_lr = lrc.predict(X_train)
+    y_test_preds_lr = lrc.predict(X_test)
+
+    # scores
+    print('random forest results')
+    print('test results')
+    print(classification_report(y_test, y_test_preds_rf))
+    print('train results')
+    print(classification_report(y_train, y_train_preds_rf))
+
+    print('logistic regression results')
+    print('test results')
+    print(classification_report(y_test, y_test_preds_lr))
+    print('train results')
+    print(classification_report(y_train, y_train_preds_lr))
 
 def main(debug=False):
     '''
     main function of this script
     '''
-    df = import_data(debug=debug)
+    # config
+    data_pth = r"./data/bank_data.csv"
+    logging.info('Reading data...')
+    df = import_data(pth=data_pth,debug=debug)
+    logging.info('Performing EDA...')
     perform_eda(df)
-    X_train, X_test, y_train, y_test = perform_feature_engineering(df, response_string)
-    train_models(X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
+    X_train, X_test, y_train, y_test = perform_feature_engineering(df)
+    logging.info("Model training...")
+    train_models(X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test, debug=debug)
 
 
 if __name__ == '__main__':
-    main()
+    debug = True
+    logging.info(f'Debug mode:{debug}')
+    main(debug=debug)

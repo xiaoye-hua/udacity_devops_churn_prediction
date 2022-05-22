@@ -1,24 +1,30 @@
 import os
 import logging
-import churn_library_solution as cls
+import pytest
+# import churn_library_solution as cls
+from churn_library import *
 
 logging.basicConfig(
-    filename='./logs/churn_library.log',
+    # filename='./logs/churn_library.log',
     level = logging.INFO,
     filemode='w',
     format='%(name)s - %(levelname)s - %(message)s')
 
-def test_import(import_data):
+
+# @pytest.fixture(scope="module")
+# def import_data():
+#     return import_data
+
+def test_import():
 	'''
 	test data import - this example is completed for you to assist with the other test functions
 	'''
 	try:
-		df = import_data("./data/bank_data.csv")
+		df = import_data("./data/bank_data.csv", debug=True)
 		logging.info("Testing import_data: SUCCESS")
 	except FileNotFoundError as err:
 		logging.error("Testing import_eda: The file wasn't found")
 		raise err
-
 	try:
 		assert df.shape[0] > 0
 		assert df.shape[1] > 0
@@ -27,11 +33,12 @@ def test_import(import_data):
 		raise err
 
 
-def test_eda(perform_eda):
+def test_eda():
 	'''
 	test perform eda function
 	'''
-
+	df = import_data("./data/bank_data.csv", debug=True)
+	perform_eda(df)
 
 def test_encoder_helper(encoder_helper):
 	'''
