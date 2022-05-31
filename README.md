@@ -7,16 +7,20 @@
 Identify credit card customers that are most likely to churn. Original data is from [Kaggle credit card customers data](https://www.kaggle.com/datasets/sakshigoyal7/credit-card-customers/code)
 
 ## Files and data description
-Overview of the files and data present in the root directory. 
+
+1. data/: train data
+2. images/: EDA, feature importance images
+3. logs/: log files
+4. model/: saved model file
 
 ## Running Files
-How do you run your files? What should happen when you run your files?
 
-
-
-## TODO 
-
-1. [ ] reduce duplicated code in test
-
-
+```shell script
+# install python pakcages
+pip instal -r requirements_py3.6.txt
+# run pytest 
+pytest churn_script_logging_and_tests.py 
+# run code
+python churn_library.py
+```
 
